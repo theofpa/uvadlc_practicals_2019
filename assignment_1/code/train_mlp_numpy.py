@@ -12,6 +12,7 @@ import os
 from mlp_numpy import MLP
 from modules import CrossEntropyModule
 import cifar10_utils
+import modules
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '100'
@@ -29,7 +30,7 @@ def accuracy(predictions, targets):
   """
   Computes the prediction accuracy, i.e. the average of correct predictions
   of the network.
-  
+
   Args:
     predictions: 2D float array of size [batch_size, n_classes]
     labels: 2D int array of size [batch_size, n_classes]
@@ -38,15 +39,15 @@ def accuracy(predictions, targets):
   Returns:
     accuracy: scalar float, the accuracy of predictions,
               i.e. the average correct predictions over the whole batch
-  
-  TODO:
+
   Implement accuracy computation.
   """
 
   ########################
   # PUT YOUR CODE HERE  #
   #######################
-  raise NotImplementedError
+  [batch_size, n_classes] = targets.shape
+  accuracy = np.sum(targets[np.arange(0, batch_size), np.argmax(predictions, axis=1)] == 1) / batch_size
   ########################
   # END OF YOUR CODE    #
   #######################
@@ -55,7 +56,7 @@ def accuracy(predictions, targets):
 
 def train():
   """
-  Performs training and evaluation of MLP model. 
+  Performs training and evaluation of MLP model.
 
   TODO:
   Implement training and evaluation of MLP model. Evaluate your model on the whole test set each eval_freq iterations.
@@ -76,7 +77,55 @@ def train():
   ########################
   # PUT YOUR CODE HERE  #
   #######################
-  raise NotImplementedError
+  # load dataset
+  dataset = cifar10_utils.get_cifar10()
+  training = dataset['train']
+  test = dataset['test']
+  # load model
+  model = MLP(n_inputs=32*32*3, n_hidden=dnn_hidden_units, n_classes=10)
+
+  test_accuracy= []
+  train_accuracy = []
+  loss_list = []
+
+  for epoch in np.arange(FLAGS.max_steps):
+
+    # forward pass
+    x, y = training.next_batch(FLAGS.batch_size)
+    out = model.forward(x.reshape(FLAGS.batch_size, -1))
+    ce = CrossEntropyModule()
+    loss = ce.forward(out, y)
+    loss_list.append(loss)
+
+    # backward pass
+    dout = ce.backward(out, y)
+    model.backward(dout)
+    for layer in model.layers:
+      if type(layer) == modules.LinearModule:
+        layer.params['weight'] = layer.params['weight'] - FLAGS.learning_rate * layer.grads['weight']
+        layer.params['bias'] = layer.params['bias'] - FLAGS.learning_rate * layer.grads['bias']
+    # evaluate periodically
+    if not epoch % FLAGS.eval_freq:
+      train_accuracy.append(accuracy(out, y))
+      out = model.forward(test.images.reshape(test.images.shape[0], -1))
+      test_accuracy.append(accuracy(out, test.labels))
+      print('Epoch: ',epoch,'Loss: ',round(loss,3),'Accuracy: ',train_accuracy[-1],'Test ac.:',test_accuracy[-1])
+
+  out = model.forward(test.images.reshape(test.images.shape[0], -1))
+  print('Test accuracy: ',accuracy(out, test.labels))
+
+
+  import seaborn as sns
+  import matplotlib.pyplot as plt
+  f, axes = plt.subplots(1, 2)
+  ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, EVAL_FREQ_DEFAULT), train_accuracy, ax=axes[0])
+  ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, EVAL_FREQ_DEFAULT), test_accuracy, ax=axes[0])
+  ax.set_title('Training and test accuracy')
+  ax.legend(['training','test'])
+  ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, 1), loss_list, ax=axes[1])
+  ax.set_title('Loss')
+  figure=ax.get_figure()
+  figure.savefig("results")
   ########################
   # END OF YOUR CODE    #
   #######################

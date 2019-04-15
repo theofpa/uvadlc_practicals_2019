@@ -29,14 +29,24 @@ class MLP(object):
                  This number is required in order to specify the
                  output dimensions of the MLP
     
-    TODO:
     Implement initialization of the network.
     """
 
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    # create the architecture, a Linear+ReLU for each hidden
+    # and finish with a Linear+Softmax
+    in_features = n_inputs
+
+    self.layers = []
+    for out_features in n_hidden:
+      self.layers.append(LinearModule(in_features, out_features))
+      self.layers.append(ReLUModule())
+      in_features = out_features
+
+    self.layers.append(LinearModule(in_features, n_classes))
+    self.layers.append(SoftMaxModule())
     ########################
     # END OF YOUR CODE    #
     #######################
@@ -51,14 +61,15 @@ class MLP(object):
     Returns:
       out: outputs of the network
     
-    TODO:
     Implement forward pass of the network.
     """
 
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    out = x
+    for layer in self.layers:
+      out = layer.forward(out)
     ########################
     # END OF YOUR CODE    #
     #######################
@@ -72,14 +83,14 @@ class MLP(object):
     Args:
       dout: gradients of the loss
     
-    TODO:
     Implement backward pass of the network.
     """
     
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    for layer in reversed(self.layers):
+      dout = layer.backward(dout)
     ########################
     # END OF YOUR CODE    #
     #######################
