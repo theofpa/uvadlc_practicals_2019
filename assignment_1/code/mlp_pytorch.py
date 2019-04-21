@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from torch import nn
-
+from custom_batchnorm import CustomBatchNormManualModule
 class MLP(nn.Module):
   """
   This class implements a Multi-layer Perceptron in PyTorch.
@@ -39,11 +39,12 @@ class MLP(nn.Module):
     in_features = n_inputs
     for out_features in n_hidden:
       linear = nn.Linear(in_features, out_features)
-      batchnorm = nn.BatchNorm1d(out_features)
+      ##batchnorm = nn.BatchNorm1d(out_features)
      # dropout = nn.Dropout(0.2)
       relu = nn.ReLU()
       self.layers.append(linear)
-      self.layers.append(batchnorm)  # custom addition
+      ##self.layers.append(batchnorm)
+      self.layers.append(CustomBatchNormManualModule(out_features))
      # self.layers.append(dropout)
       self.layers.append(relu)
 
