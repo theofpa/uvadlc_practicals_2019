@@ -238,11 +238,7 @@ class CustomBatchNormManualModule(nn.Module):
       input: input tensor of shape (n_batch, n_neurons)
     Returns:
       out: batch-normalized tensor
-    
-    TODO:
-      Check for the correctness of the shape of the input tensor.
-      Instantiate a CustomBatchNormManualFunction.
-      Call it via its .apply() method.
+
     """
 
     ########################

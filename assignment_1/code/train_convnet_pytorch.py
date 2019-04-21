@@ -11,7 +11,9 @@ import numpy as np
 import os
 from convnet_pytorch import ConvNet
 import cifar10_utils
-
+import torch
+import matplotlib.pyplot as plt
+from torch.autograd import Variable
 # Default constants
 LEARNING_RATE_DEFAULT = 1e-4
 BATCH_SIZE_DEFAULT = 32
@@ -38,14 +40,14 @@ def accuracy(predictions, targets):
     accuracy: scalar float, the accuracy of predictions,
               i.e. the average correct predictions over the whole batch
   
-  TODO:
   Implement accuracy computation.
   """
 
   ########################
   # PUT YOUR CODE HERE  #
   #######################
-  raise NotImplementedError
+  [batch_size, n_classes] = targets.shape
+  accuracy = float(torch.sum(targets[np.arange(0, batch_size), torch.argmax(predictions, dim=1)] == 1))/batch_size
   ########################
   # END OF YOUR CODE    #
   #######################
@@ -56,7 +58,6 @@ def train():
   """
   Performs training and evaluation of ConvNet model. 
 
-  TODO:
   Implement training and evaluation of ConvNet model. Evaluate your model on the whole test set each eval_freq iterations.
   """
 
@@ -67,8 +68,64 @@ def train():
   ########################
   # PUT YOUR CODE HERE  #
   #######################
-  raise NotImplementedError
-  ########################
+
+  device = torch.device("cuda")
+
+  cifar10 = cifar10_utils.get_cifar10(DATA_DIR_DEFAULT)
+
+  dataset = cifar10_utils.get_cifar10()
+  training = dataset['train']
+  test = dataset['test']
+
+  model = ConvNet(3, 10)
+  model.to(device)
+
+  optimizer = torch.optim.Adam(model.parameters(), lr=FLAGS.learning_rate)
+
+  ce = torch.nn.CrossEntropyLoss()
+
+  test_accuracy= []
+  loss_list = []
+
+  for epoch in np.arange(0, FLAGS.max_steps):
+    x, y = training.next_batch(FLAGS.batch_size)
+    x = Variable(torch.tensor(x).to(device))
+    y = Variable(torch.tensor(y).to(device))
+
+    optimizer.zero_grad()
+    model.train()
+    yh = model.forward(x)
+    loss = ce(yh, torch.max(y,1)[1])
+    loss_list.append(loss.item())
+    loss.backward()
+    optimizer.step()
+
+    if (epoch + 1) % int(FLAGS.eval_freq) == 0:
+
+      acc = []
+      with torch.no_grad():
+        for _ in np.arange(0, (test.num_examples // FLAGS.batch_size)):
+          x, y = test.next_batch(FLAGS.batch_size)
+          x = torch.tensor(x).to(device)
+          y = torch.tensor(y).to(device)
+
+          model.eval()
+          yh = model.forward(x)
+          acc.append(accuracy(yh, y))
+        test_accuracy.append(np.mean(acc))
+        print(np.mean(acc))
+
+  import seaborn as sns
+  import matplotlib.pyplot as plt
+  f, axes = plt.subplots(1, 2)
+  ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, EVAL_FREQ_DEFAULT), test_accuracy, ax=axes[0])
+  ax.set_title('Test accuracy')
+  ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, 1), loss_list, ax=axes[1])
+  ax.set_title('Loss')
+  figure=ax.get_figure()
+  figure.savefig("cnn-pytorch-results")
+
+########################
   # END OF YOUR CODE    #
   #######################
 
