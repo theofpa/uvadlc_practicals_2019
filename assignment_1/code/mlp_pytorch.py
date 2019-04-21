@@ -5,6 +5,7 @@ You should fill in code into indicated sections.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from torch import nn
 
 class MLP(nn.Module):
   """
@@ -27,14 +28,33 @@ class MLP(nn.Module):
                  This number is required in order to specify the
                  output dimensions of the MLP
     
-    TODO:
     Implement initialization of the network.
     """
 
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    super(MLP, self).__init__()
+    self.layers = []
+    in_features = n_inputs
+    for out_features in n_hidden:
+      linear = nn.Linear(in_features, out_features)
+      batchnorm = nn.BatchNorm1d(out_features)
+     # dropout = nn.Dropout(0.2)
+      relu = nn.ReLU()
+      self.layers.append(linear)
+      self.layers.append(batchnorm)  # custom addition
+     # self.layers.append(dropout)
+      self.layers.append(relu)
+
+      in_features = out_features
+    #dropout = nn.Dropout()
+    #self.layers.append(dropout)
+    linear = nn.Linear(in_features, n_classes)
+    softmax = nn.Softmax()
+    self.layers.append(linear)
+    # self.layers.append(softmax)
+    self.sequential = nn.Sequential(*self.layers)
     ########################
     # END OF YOUR CODE    #
     #######################
@@ -49,14 +69,13 @@ class MLP(nn.Module):
     Returns:
       out: outputs of the network
     
-    TODO:
     Implement forward pass of the network.
     """
 
     ########################
     # PUT YOUR CODE HERE  #
     #######################
-    raise NotImplementedError
+    out = self.sequential(x.reshape(x.shape[0], -1))
     ########################
     # END OF YOUR CODE    #
     #######################

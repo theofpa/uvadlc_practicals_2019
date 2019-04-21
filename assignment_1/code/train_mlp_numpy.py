@@ -30,7 +30,6 @@ def accuracy(predictions, targets):
   """
   Computes the prediction accuracy, i.e. the average of correct predictions
   of the network.
-
   Args:
     predictions: 2D float array of size [batch_size, n_classes]
     labels: 2D int array of size [batch_size, n_classes]
@@ -39,7 +38,6 @@ def accuracy(predictions, targets):
   Returns:
     accuracy: scalar float, the accuracy of predictions,
               i.e. the average correct predictions over the whole batch
-
   Implement accuracy computation.
   """
 
@@ -57,8 +55,6 @@ def accuracy(predictions, targets):
 def train():
   """
   Performs training and evaluation of MLP model.
-
-  TODO:
   Implement training and evaluation of MLP model. Evaluate your model on the whole test set each eval_freq iterations.
   """
 
@@ -125,7 +121,7 @@ def train():
   ax=sns.lineplot(np.arange(0, MAX_STEPS_DEFAULT, 1), loss_list, ax=axes[1])
   ax.set_title('Loss')
   figure=ax.get_figure()
-  figure.savefig("results")
+  figure.savefig("mlp-numpy-results")
   ########################
   # END OF YOUR CODE    #
   #######################
@@ -167,4 +163,4 @@ if __name__ == '__main__':
                       help='Directory for storing input data')
   FLAGS, unparsed = parser.parse_known_args()
 
-  main()
+main()
